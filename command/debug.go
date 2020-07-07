@@ -669,7 +669,7 @@ func (c *DebugCommand) trap() {
 }
 
 // TarCZF, like the tar command, recursively builds a gzip compressed tar archive from a
-// directory
+// directory. Include the last segment of the src directory in the archive path
 func TarCZF(archive string, src string) error {
 	// ensure the src actually exists before trying to tar it
 	if _, err := os.Stat(src); err != nil {
@@ -689,6 +689,9 @@ func TarCZF(archive string, src string) error {
 	tw := tar.NewWriter(zz)
 	defer tw.Close()
 
+	// split src into the prefix to discard and the last section to keep
+	pfix, _ := filepath.Split(src)
+
 	// tar
 	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
 
@@ -706,8 +709,8 @@ func TarCZF(archive string, src string) error {
 			return err
 		}
 
-		// remove leading path to the src, so files are relative to the archive
-		header.Name = strings.TrimPrefix(strings.Replace(file, src, "", -1), string(filepath.Separator))
+		// remove leading path to the pfix, so files are relative to the archive
+		header.Name = strings.TrimPrefix(strings.Replace(file, pfix, "", -1), string(filepath.Separator))
 
 		if err := tw.WriteHeader(header); err != nil {
 			return err
