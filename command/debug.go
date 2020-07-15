@@ -670,7 +670,7 @@ func (c *external) addr(addr string) string {
 	if c.addrVal == "" {
 		return addr
 	}
-	if c.ssl != "" && c.addrVal[0:5] != "https" {
+	if c.ssl && c.addrVal[0:5] != "https" {
 		return "https" + string(c.addrVal[4:])
 	}
 	return c.addrVal
