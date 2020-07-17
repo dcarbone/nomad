@@ -305,10 +305,6 @@ func (c *DebugCommand) Run(args []string) int {
 		return 2
 	}
 
-	if c.ctx.Err() != nil {
-		return 2
-	}
-
 	c.writeManifest()
 
 	if output != "" {
@@ -364,7 +360,6 @@ func (c *DebugCommand) collect(client *api.Client) error {
 	c.collectConsul(dir, consul)
 	c.collectVault(dir, vault)
 	c.collectAgentHosts(client)
-	c.collectOperator(client)
 	c.collectPprofs(client)
 
 	c.startMonitors(client)
@@ -528,6 +523,7 @@ func (c *DebugCommand) collectPeriodic(client *api.Client) {
 			dir = filepath.Join("nomad", name)
 			c.Ui.Output(fmt.Sprintf("==> Capture interval %s", name))
 			c.collectNomad(dir, client)
+			c.collectOperator(dir, client)
 			interval = time.After(c.interval)
 			intervalCount += 1
 
@@ -589,11 +585,8 @@ func (c *DebugCommand) collectConsul(dir, consul string) error {
 		return nil
 	}
 
-	client := http.Client{
-		Transport: http.DefaultTransport,
-		Timeout:   2 * time.Second,
-	}
-	api.ConfigureTLS(&client, c.consul.tls)
+	client := api.DefaultHttpClient()
+	api.ConfigureTLS(client, c.consul.tls)
 
 	req, _ := http.NewRequest("GET", addr+"/v1/agent/self", nil)
 	req.Header.Add("X-Consul-Token", c.consul.token())
@@ -617,11 +610,8 @@ func (c *DebugCommand) collectVault(dir, vault string) error {
 		return nil
 	}
 
-	client := http.Client{
-		Transport: http.DefaultTransport,
-		Timeout:   2 * time.Second,
-	}
-	api.ConfigureTLS(&client, c.vault.tls)
+	client := api.DefaultHttpClient()
+	api.ConfigureTLS(client, c.vault.tls)
 
 	req, _ := http.NewRequest("GET", addr+"/sys/health", nil)
 	req.Header.Add("X-Vault-Token", c.vault.token())
@@ -706,12 +696,14 @@ type errorWrapper struct {
 func (c *DebugCommand) writeBody(dir, file string, resp *http.Response, err error) {
 	if err != nil {
 		c.writeError(dir, file, err)
+		return
 	}
-	defer resp.Body.Close()
 
 	if resp.ContentLength == 0 {
 		return
 	}
+
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
