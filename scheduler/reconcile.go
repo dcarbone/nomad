@@ -431,9 +431,7 @@ func (a *allocReconciler) computeGroup(group string, all allocSet) bool {
 	if requireCanary && !a.deploymentPaused && !a.deploymentFailed {
 		number := strategy.Canary - len(canaries)
 		desiredChanges.Canary += uint64(number)
-		if !existingDeployment {
-			dstate.DesiredCanaries = strategy.Canary
-		}
+		dstate.DesiredCanaries = strategy.Canary
 
 		for _, name := range nameIndex.NextCanaries(uint(number), canaries, destructive) {
 			a.result.place = append(a.result.place, allocPlaceResult{
