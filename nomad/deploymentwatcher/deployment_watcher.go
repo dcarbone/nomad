@@ -190,8 +190,8 @@ func (w *deploymentWatcher) SetAllocHealth(
 			}
 
 			// Check if the group has autorevert set
-			group, ok := w.getDeployment().TaskGroups[alloc.TaskGroup]
-			if !ok || !group.AutoRevert {
+			dstate, ok := w.getDeployment().TaskGroups[alloc.TaskGroup]
+			if !ok || !dstate.AutoRevert {
 				continue
 			}
 

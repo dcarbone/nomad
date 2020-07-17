@@ -3768,8 +3768,8 @@ func (s *StateStore) UpdateDeploymentPromotion(index uint64, req *structs.ApplyD
 
 	// canaryIndex is the set of placed canaries in the deployment
 	canaryIndex := make(map[string]struct{}, len(deployment.TaskGroups))
-	for _, state := range deployment.TaskGroups {
-		for _, c := range state.PlacedCanaries {
+	for _, dstate := range deployment.TaskGroups {
+		for _, c := range dstate.PlacedCanaries {
 			canaryIndex[c] = struct{}{}
 		}
 	}
@@ -3810,12 +3810,12 @@ func (s *StateStore) UpdateDeploymentPromotion(index uint64, req *structs.ApplyD
 
 	// Determine if we have enough healthy allocations
 	var unhealthyErr multierror.Error
-	for tg, state := range deployment.TaskGroups {
+	for tg, dstate := range deployment.TaskGroups {
 		if _, ok := groupIndex[tg]; !req.All && !ok {
 			continue
 		}
 
-		need := state.DesiredCanaries
+		need := dstate.DesiredCanaries
 		if need == 0 {
 			continue
 		}
