@@ -5,7 +5,10 @@ export default async function defaultA11yAudit() {
     rules: {
       'color-contrast': {
         enabled: false
-      }
+      },
+      'heading-order': {
+        enabled: false
+      },
     }
   });
 }
